@@ -1,0 +1,238 @@
+
+
+import pandas as pd
+import numpy as np
+import numpy as np
+seaborn as sns
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import GradientBoostingClassifier
+from xgboost import XGBClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import make_scorer,accuracy_score, balanced_accuracy_score, confusion_matrix, f1_score, precision_score, average_precision_score,  recall_score
+
+df = pd.read_csv('creditcard.csv')
+print(df)
+            Time         V1         V2        V3        V4        V5  \
+0            0.0  -1.359807  -0.072781  2.536347  1.378155 -0.338321   
+1            0.0   1.191857   0.266151  0.166480  0.448154  0.060018   
+2            1.0  -1.358354  -1.340163  1.773209  0.379780 -0.503198   
+3            1.0  -0.966272  -0.185226  1.792993 -0.863291 -0.010309   
+4            2.0  -1.158233   0.877737  1.548718  0.403034 -0.407193   
+...          ...        ...        ...       ...       ...       ...   
+284802  172786.0 -11.881118  10.071785 -9.834783 -2.066656 -5.364473   
+284803  172787.0  -0.732789  -0.055080  2.035030 -0.738589  0.868229   
+284804  172788.0   1.919565  -0.301254 -3.249640 -0.557828  2.630515   
+284805  172788.0  -0.240440   0.530483  0.702510  0.689799 -0.377961   
+284806  172792.0  -0.533413  -0.189733  0.703337 -0.506271 -0.012546   
+
+              V6        V7        V8        V9  ...       V21       V22  \
+0       0.462388  0.239599  0.098698  0.363787  ... -0.018307  0.277838   
+1      -0.082361 -0.078803  0.085102 -0.255425  ... -0.225775 -0.638672   
+2       1.800499  0.791461  0.247676 -1.514654  ...  0.247998  0.771679   
+3       1.247203  0.237609  0.377436 -1.387024  ... -0.108300  0.005274   
+4       0.095921  0.592941 -0.270533  0.817739  ... -0.009431  0.798278   
+...          ...       ...       ...       ...  ...       ...       ...   
+284802 -2.606837 -4.918215  7.305334  1.914428  ...  0.213454  0.111864   
+284803  1.058415  0.024330  0.294869  0.584800  ...  0.214205  0.924384   
+284804  3.031260 -0.296827  0.708417  0.432454  ...  0.232045  0.578229   
+284805  0.623708 -0.686180  0.679145  0.392087  ...  0.265245  0.800049   
+284806 -0.649617  1.577006 -0.414650  0.486180  ...  0.261057  0.643078   
+
+             V23       V24       V25       V26       V27       V28  Amount  \
+0      -0.110474  0.066928  0.128539 -0.189115  0.133558 -0.021053  149.62   
+1       0.101288 -0.339846  0.167170  0.125895 -0.008983  0.014724    2.69   
+2       0.909412 -0.689281 -0.327642 -0.139097 -0.055353 -0.059752  378.66   
+3      -0.190321 -1.175575  0.647376 -0.221929  0.062723  0.061458  123.50   
+4      -0.137458  0.141267 -0.206010  0.502292  0.219422  0.215153   69.99   
+...          ...       ...       ...       ...       ...       ...     ...   
+284802  1.014480 -0.509348  1.436807  0.250034  0.943651  0.823731    0.77   
+284803  0.012463 -1.016226 -0.606624 -0.395255  0.068472 -0.053527   24.79   
+284804 -0.037501  0.640134  0.265745 -0.087371  0.004455 -0.026561   67.88   
+284805 -0.163298  0.123205 -0.569159  0.546668  0.108821  0.104533   10.00   
+284806  0.376777  0.008797 -0.473649 -0.818267 -0.002415  0.013649  217.00   
+
+        Class  
+0           0  
+1           0  
+2           0  
+3           0  
+4           0  
+...       ...  
+284802      0  
+284803      0  
+284804      0  
+284805      0  
+284806      0  
+
+[284807 rows x 31 columns]
+df.head()
+Time	V1	V2	V3	V4	V5	V6	V7	V8	V9	...	V21	V22	V23	V24	V25	V26	V27	V28	Amount	Class
+0	0.0	-1.359807	-0.072781	2.536347	1.378155	-0.338321	0.462388	0.239599	0.098698	0.363787	...	-0.018307	0.277838	-0.110474	0.066928	0.128539	-0.189115	0.133558	-0.021053	149.62	0
+1	0.0	1.191857	0.266151	0.166480	0.448154	0.060018	-0.082361	-0.078803	0.085102	-0.255425	...	-0.225775	-0.638672	0.101288	-0.339846	0.167170	0.125895	-0.008983	0.014724	2.69	0
+2	1.0	-1.358354	-1.340163	1.773209	0.379780	-0.503198	1.800499	0.791461	0.247676	-1.514654	...	0.247998	0.771679	0.909412	-0.689281	-0.327642	-0.139097	-0.055353	-0.059752	378.66	0
+3	1.0	-0.966272	-0.185226	1.792993	-0.863291	-0.010309	1.247203	0.237609	0.377436	-1.387024	...	-0.108300	0.005274	-0.190321	-1.175575	0.647376	-0.221929	0.062723	0.061458	123.50	0
+4	2.0	-1.158233	0.877737	1.548718	0.403034	-0.407193	0.095921	0.592941	-0.270533	0.817739	...	-0.009431	0.798278	-0.137458	0.141267	-0.206010	0.502292	0.219422	0.215153	69.99	0
+5 rows × 31 columns
+
+df.shape
+(284807, 31)
+df.isna().sum()
+Time      0
+V1        0
+V2        0
+V3        0
+V4        0
+V5        0
+V6        0
+V7        0
+V8        0
+V9        0
+V10       0
+V11       0
+V12       0
+V13       0
+V14       0
+V15       0
+V16       0
+V17       0
+V18       0
+V19       0
+V20       0
+V21       0
+V22       0
+V23       0
+V24       0
+V25       0
+V26       0
+V27       0
+V28       0
+Amount    0
+Class     0
+dtype: int64
+plt.figure(figsize=(20,14))
+sns.heatmap(df.corr(), annot=False,cmap="viridis")
+<AxesSubplot:>
+
+df.hist(figsize=(30,30))
+array([[<AxesSubplot:title={'center':'Time'}>,
+        <AxesSubplot:title={'center':'V1'}>,
+        <AxesSubplot:title={'center':'V2'}>,
+        <AxesSubplot:title={'center':'V3'}>,
+        <AxesSubplot:title={'center':'V4'}>,
+        <AxesSubplot:title={'center':'V5'}>],
+       [<AxesSubplot:title={'center':'V6'}>,
+        <AxesSubplot:title={'center':'V7'}>,
+        <AxesSubplot:title={'center':'V8'}>,
+        <AxesSubplot:title={'center':'V9'}>,
+        <AxesSubplot:title={'center':'V10'}>,
+        <AxesSubplot:title={'center':'V11'}>],
+       [<AxesSubplot:title={'center':'V12'}>,
+        <AxesSubplot:title={'center':'V13'}>,
+        <AxesSubplot:title={'center':'V14'}>,
+        <AxesSubplot:title={'center':'V15'}>,
+        <AxesSubplot:title={'center':'V16'}>,
+        <AxesSubplot:title={'center':'V17'}>],
+       [<AxesSubplot:title={'center':'V18'}>,
+        <AxesSubplot:title={'center':'V19'}>,
+        <AxesSubplot:title={'center':'V20'}>,
+        <AxesSubplot:title={'center':'V21'}>,
+        <AxesSubplot:title={'center':'V22'}>,
+        <AxesSubplot:title={'center':'V23'}>],
+       [<AxesSubplot:title={'center':'V24'}>,
+        <AxesSubplot:title={'center':'V25'}>,
+        <AxesSubplot:title={'center':'V26'}>,
+        <AxesSubplot:title={'center':'V27'}>,
+        <AxesSubplot:title={'center':'V28'}>,
+        <AxesSubplot:title={'center':'Amount'}>],
+       [<AxesSubplot:title={'center':'Class'}>, <AxesSubplot:>,
+        <AxesSubplot:>, <AxesSubplot:>, <AxesSubplot:>, <AxesSubplot:>]],
+      dtype=object)
+
+)
+fig, ax = plt.subplots(1, figsize=(18, 4))
+​
+fraud_data = df[df['Class'] == 1]
+time_val_fraud = fraud_data['Time'].values
+​
+sns.histplot(time_val_fraud, color='red', kde=True)
+ax.set_title('Distribution of Transaction Time for Fraudulent Transactions', fontsize=14)
+ax.set_xlim([min(time_val_fraud), max(time_val_fraud)])
+​
+plt.show()
+
+X=df.drop("Class",axis=1)
+Y=df["Class"]
+X_train, X_test, Y_train, Y_test = train_test_split(X,Y,test_size=0.2, random_state=42)
+print("Ratio Train Set :  ",sum(Y_train.values)/len(Y_train))
+print("Ratio Train Set :  ",sum(Y_test.values)/len(Y_test))
+Ratio Train Set :   0.001729245759178389
+Ratio Train Set :   0.0017204452090867595
+classifiers = {
+    'RandomForest': RandomForestClassifier(),
+   
+    'DecisionTree' : DecisionTreeClassifier(),
+    'XGBoost' : XGBClassifier() }
+    
+param_grid = {
+    'RandomForest': {'n_estimators': [10, 50], 'max_depth': [None, 8]},
+   
+    'DecisionTree' : {'max_depth': [None, 8]},
+    'XGBoost' : {'n_estimators': [50, 100], 'learning_rate': [0.01, 0.1, 0.2]}
+}
+from sklearn.metrics import average_precision_score, make_scorer
+from sklearn.model_selection import GridSearchCV
+​
+decision_scorer = make_scorer(average_precision_score, greater_is_better=True)
+​
+best_score = 0 
+best_model = None  
+best_model_name = None  
+​
+for model_name, model in classifiers.items():
+    grid_search = GridSearchCV(model, param_grid[model_name], scoring=decision_scorer, cv=5)
+    grid_search.fit(X_train, Y_train)
+    best_clf = grid_search.best_estimator_
+​
+    if grid_search.best_score_ > best_score:
+        best_score = grid_search.best_score_
+        best_model = grid_search.best_estimator_
+        best_model_name = model_name
+​
+    predictions = best_clf.predict(X_test)
+​
+    score = average_precision_score(Y_test, predictions)
+    print(f"{model_name} - Best Score: {grid_search.best_score_}, Test Score: {score}, Best Parameters: {grid_search.best_params_}")
+RandomForest - Best Score: 0.7290945327094546, Test Score: 0.7261038143051143, Best Parameters: {'max_depth': None, 'n_estimators': 50}
+DecisionTree - Best Score: 0.6567468267036991, Test Score: 0.7206067620686138, Best Parameters: {'max_depth': 8}
+XGBoost - Best Score: 0.7449035906554512, Test Score: 0.756011549447775, Best Parameters: {'learning_rate': 0.1, 'n_estimators': 100}
+Y_pred=best_model.predict(X_test)
+​
+​
+plt.figure(figsize=(4, 4))
+sns.heatmap(confusion_matrix(Y_test, Y_pred), annot=True, fmt=".2f", cmap="viridis", cbar=False,
+            xticklabels=["Legal", "Fraud"],
+            yticklabels=["Legal", "Fraud"])
+plt.xlabel('Prédictions')
+plt.ylabel('Vérité connue')
+plt.title('Matrice de Confusion')
+​
+plt.show()
+
+print("Model : ",best_model_name)
+​
+print(f'Balanced  :{balanced_accuracy_score(Y_test, Y_pred):.2f}' )
+print(f'F1        :{f1_score(Y_test, Y_pred):.2f}' )
+print(f'Precision :{precision_score(Y_test, Y_pred):.2f}' )
+print(f'Recall    :{recall_score(Y_test, Y_pred):.2f}' )
+print(f'AUPRC    :{average_precision_score(Y_test, Y_pred):.4f}' )
+Model :  XGBoost
+Balanced  :0.89
+F1        :0.86
+Precision :0.97
+Recall    :0.78
+AUPRC    :0.7560
